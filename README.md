@@ -31,7 +31,7 @@ The workflow transforms raw elevation data into a clear, decision-ready GIS outp
 <h2>Tools and Technologies</h2>
 
 <ul>
-  <li>QGIS 3.44</li>
+  <li>QGIS 3.44 (Solothurn)</li>
   <li>QGIS Graphical Modeler</li>
   <li>PyQGIS (Python Console)</li>
   <li>GDAL</li>
@@ -52,18 +52,26 @@ The workflow transforms raw elevation data into a clear, decision-ready GIS outp
 <th>Purpose</th>
 </tr>
 <tr>
-<td>DEM</td>
-<td>USGS 3DEP</td>
+<td>DEM (LiDAR-derived)</td>
+<td>
+<a href="https://www.usgs.gov/3d-elevation-program" target="_blank">
+USGS 3DEP (3D Elevation Program)
+</a>
+</td>
 <td>Elevation surface</td>
 </tr>
 <tr>
-<td>Slope</td>
-<td>Derived from DEM</td>
+<td>Slope Raster</td>
+<td>Derived from DEM in QGIS</td>
 <td>Terrain steepness</td>
 </tr>
 <tr>
 <td>Bike Lanes</td>
-<td>OSM / DC Data</td>
+<td>
+<a href="https://www.openstreetmap.org" target="_blank">
+OpenStreetMap
+</a>
+</td>
 <td>Transportation layer</td>
 </tr>
 <tr>
@@ -73,16 +81,17 @@ The workflow transforms raw elevation data into a clear, decision-ready GIS outp
 </tr>
 </table>
 
+<p><b>Note:</b> DEM and slope raster files are not included due to large size. Download them from the links above.</p>
+
 <hr>
 
 <h2>Coordinate System</h2>
 
 <pre>EPSG:26918 — NAD83 / UTM Zone 18N</pre>
 
-<p>This ensures:</p>
 <ul>
-<li>Units in meters</li>
-<li>Accurate slope and distance calculations</li>
+<li>Meter-based units</li>
+<li>Accurate slope + distance analysis</li>
 </ul>
 
 <hr>
@@ -96,24 +105,73 @@ The workflow transforms raw elevation data into a clear, decision-ready GIS outp
 <h3>Goal</h3>
 
 <p>
-Automatically identify bike lane segments located on terrain with slope ≤ 15° using a repeatable workflow.
+Automatically identify bike lane segments located on terrain ≤ 15° using a scalable and optimized workflow.
 </p>
 
 <hr>
 
-<h3>Workflow Overview</h3>
+<h3>Workflow Steps</h3>
 
-<p>This model converts terrain data into a transportation insight through a sequence of spatial operations.</p>
+<h4>Step 1 — Add Slope Raster</h4>
+<ul>
+<li>Input: slope raster</li>
+<li>Concept: raster stores terrain steepness per pixel</li>
+<li>Purpose: foundation for terrain suitability analysis</li>
+</ul>
+
+<h4>Step 2 — Add Bike Lanes</h4>
+<ul>
+<li>Input: bike_utm (line layer)</li>
+<li>Purpose: target features for analysis</li>
+</ul>
+
+<h4>Step 3 — Buffer Bike Lanes (Performance Optimization)</h4>
+<ul>
+<li>Distance: 50 meters</li>
+<li>Dissolve: Yes</li>
+<li>Purpose: limit analysis area → major speed improvement</li>
+</ul>
+
+<h4>Step 4 — Clip Slope Raster</h4>
+<ul>
+<li>Output: slope_clipped_to_bike_area</li>
+<li>Purpose: reduce raster size and processing time</li>
+</ul>
+
+<h4>Step 5 — Raster Calculator</h4>
+<pre>A <= 15</pre>
+<ul>
+<li>Output: slope_bike_friendly_15</li>
+<li>Purpose: classify terrain into bike-friendly vs not</li>
+</ul>
+
+<h4>Step 6 — Polygonize Raster</h4>
+<ul>
+<li>Output: slope_bike_friendly_15_polygon</li>
+<li>Purpose: convert raster → vector for overlay</li>
+</ul>
+
+<h4>Step 7 — Extract DN = 1</h4>
+<ul>
+<li>Output: slope_bike_friendly_15_only</li>
+<li>Purpose: keep only suitable terrain</li>
+</ul>
+
+<h4>Step 8 — Extract by Location</h4>
+<ul>
+<li>Output: bike_friendly_segments_15</li>
+<li>Purpose: final bike-friendly segments</li>
+</ul>
+
+<hr>
+
+<h3>Key Improvements (Important)</h3>
 
 <ul>
-<li><b>Slope Raster:</b> Provides terrain steepness</li>
-<li><b>Bike Lanes:</b> Target transportation network</li>
-<li><b>Buffer:</b> Limits analysis area for performance</li>
-<li><b>Raster Clip:</b> Reduces processing load</li>
-<li><b>Raster Calculator:</b> Classifies slope ≤ 15°</li>
-<li><b>Polygonize:</b> Converts raster to vector</li>
-<li><b>Extract:</b> Keeps only suitable terrain</li>
-<li><b>Spatial Overlay:</b> Finds bike-friendly segments</li>
+<li>Used <b>buffer + raster clipping</b> to reduce processing time drastically</li>
+<li>Avoided processing full DEM (critical for performance)</li>
+<li>Ensured CRS consistency (EPSG:26918)</li>
+<li>Converted raster to vector for proper spatial overlay</li>
 </ul>
 
 <hr>
@@ -127,13 +185,27 @@ Automatically identify bike lane segments located on terrain with slope ≤ 15°
 <h3>Goal</h3>
 
 <p>
-Automatically generate a clean, professional, print-ready map layout using PyQGIS.
+Automatically generate a clean, professional, print-ready map using PyQGIS.
 </p>
 
 <hr>
 
-<h3>Layout Design</h3>
+<h3>Workflow Steps</h3>
 
+<h4>Step 1 — Load Layers</h4>
+<ul>
+<li>slope</li>
+<li>dem_merged</li>
+<li>bike_friendly_segments_15</li>
+</ul>
+
+<h4>Step 2 — Create Layout</h4>
+<ul>
+<li>Name: Mapping_the_Unseen_City_Print_Layout</li>
+<li>Page: A4 Landscape</li>
+</ul>
+
+<h4>Step 3 — Add Map</h4>
 <pre>
 X: 15 mm
 Y: 30 mm
@@ -141,30 +213,52 @@ Width: 265 mm
 Height: 190 mm
 </pre>
 
-<p>This allows the map to cover ~98% of the page.</p>
-
-<hr>
-
-<h3>Layout Elements</h3>
-
 <ul>
-<li>Title and subtitle</li>
-<li>Large map frame</li>
-<li>Legend (bottom-right inside map)</li>
-<li>Scale bar (bottom-left inside map)</li>
-<li>North arrow (above scale bar)</li>
-<li>Data attribution</li>
+<li>Covers ~98% of page</li>
+<li>Uses current map canvas extent</li>
+</ul>
+
+<h4>Step 4 — Apply Styling</h4>
+<ul>
+<li>Bike segments: dark green (#006D2C)</li>
+<li>Slope: semi-transparent</li>
+<li>DEM: background context</li>
+</ul>
+
+<h4>Step 5 — Add Legend</h4>
+<ul>
+<li>Position: bottom-right inside map</li>
+<li>White background + black border</li>
+<li>Only 2 items:</li>
+<ul>
+<li>Bike-friendly segments</li>
+<li>Slope (≤ 15°)</li>
+</ul>
+</ul>
+
+<h4>Step 6 — Add Scale Bar</h4>
+<ul>
+<li>Position: bottom-left inside map</li>
+<li>0–4 km</li>
+<li>White background + black frame</li>
+</ul>
+
+<h4>Step 7 — Add North Arrow</h4>
+<ul>
+<li>Position: above scale bar</li>
+<li>No background</li>
 </ul>
 
 <hr>
 
-<h3>Design Decisions</h3>
+<h3>Key Improvements (Important)</h3>
 
 <ul>
-<li><b>Slope:</b> Used as background with reduced opacity</li>
-<li><b>Bike segments:</b> Highlighted as main feature</li>
-<li><b>Legend:</b> Simplified for clarity</li>
-<li><b>Layout:</b> Clean and print-friendly</li>
+<li>Ensured map fits inside page (no overflow)</li>
+<li>Placed all elements INSIDE map for compact layout</li>
+<li>Cleaned legend (removed unnecessary layers)</li>
+<li>Added consistent styling and hierarchy</li>
+<li>Removed clutter (notes, extra text)</li>
 </ul>
 
 <hr>
@@ -194,17 +288,13 @@ mapping-the-unseen-city-dc/
 
 <h2>Summary</h2>
 
-<p>
-This project demonstrates a complete GIS workflow:
-</p>
-
 <ul>
-<li>Terrain analysis using LiDAR-derived DEM</li>
-<li>Spatial filtering using slope threshold</li>
-<li>Automation using QGIS Model Builder</li>
-<li>Map production using Python</li>
+<li>End-to-end GIS workflow</li>
+<li>Terrain + transportation integration</li>
+<li>Performance optimization</li>
+<li>Automation (Model + Python)</li>
 </ul>
 
 <p>
-The result is a reproducible pipeline that transforms raw elevation data into a practical, transportation-focused insight.
+This project demonstrates how raw elevation data can be transformed into actionable transportation insight using automated GIS workflows.
 </p>
