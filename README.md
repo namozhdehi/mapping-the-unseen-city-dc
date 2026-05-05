@@ -7,21 +7,14 @@
 
 ## Project Overview
 
-Urban mobility is not only about where roads and bike lanes exist. Terrain plays a critical role in how usable and comfortable these routes are. A bike lane on a steep slope may technically exist but may not be practical for many users.
+Urban mobility is not only about where roads and bike lanes exist. Terrain plays a critical role in how usable and comfortable these routes are. A bike lane may technically exist on a map, but steep slopes can make it difficult or impractical for many users.
 
-This project uses LiDAR-derived elevation data, slope analysis, QGIS Model Builder, and Python automation to identify **existing bike lane segments that are located on bike-friendly terrain (≤ 15° slope)** in Washington, DC.
+In this project, I used LiDAR-derived elevation data, slope analysis, QGIS Model Builder, and Python automation to identify **existing bike lane segments located on bike-friendly terrain (≤ 15° slope)** in Washington, DC.
 
-The workflow transforms raw terrain data into a decision-ready GIS output using both **model automation (Part A)** and **layout automation (Part B)**.
+The workflow transforms raw elevation data into a clear, decision-ready GIS output by combining:
 
----
-
-## Final Outputs
-
-### Model (QGIS Graphical Modeler)
-![Model Screenshot](outputs/model_screenshot.png)
-
-### Final Print Layout
-![Print Layout](outputs/final_print_layout.png)
+- Automated spatial analysis (Part A)
+- Automated map production (Part B)
 
 ---
 
@@ -58,75 +51,68 @@ EPSG:26918 — NAD83 / UTM Zone 18N
 
 
 This ensures:
-- Units in meters
-- Accurate slope and distance calculations
+- Units in meters  
+- Accurate slope and distance calculations  
 
 ---
 
 # Part A — QGIS Model Builder Automation
 
+![Model Screenshot](outputs/model_screenshot.png)
+
 ## Goal
 
-Automatically identify **existing bike lane segments located on terrain with slope ≤ 15°** using a repeatable workflow.
+Automatically identify **bike lane segments located on terrain with slope ≤ 15°** using a repeatable workflow.
 
 ---
 
-## Model Workflow
+## Workflow Overview
+
+This model converts terrain data into a transportation insight through a series of spatial operations.
+
+---
 
 ### Step 1 — Slope Raster Input
 
-**Task:** Add raster input `Slope Raster`
+**What happens:**  
+Load the slope raster derived from DEM.
 
-**Concept:**  
-Slope raster stores terrain steepness in degrees.
-
-**Purpose:**  
-Used to classify terrain suitability for biking.
+**Why it matters:**  
+Each pixel represents terrain steepness, which is the foundation for defining bike-friendly areas.
 
 ---
 
 ### Step 2 — Bike Lane Input
 
-**Task:** Add vector input `Bike Lanes`
+**What happens:**  
+Load bike lane vector data.
 
-**Concept:**  
-Vector line layer representing transportation features.
-
-**Purpose:**  
-Final output will be filtered bike lane segments.
+**Why it matters:**  
+This is the network we evaluate against terrain conditions.
 
 ---
 
 ### Step 3 — Buffer Bike Lanes
 
-**Task:**
+**Settings:**
+- Distance: 50 meters  
+- Dissolve: Yes  
 
-Distance: 50 meters
-Dissolve: Yes
-
-
-**Concept:**  
-Buffer creates an area around features.
-
-**Purpose:**  
-Reduces analysis area to improve performance.
+**Why it matters:**  
+Instead of analyzing the entire city, we limit the analysis to areas near bike lanes.  
+This significantly improves performance.
 
 ---
 
 ### Step 4 — Clip Slope Raster
-
-**Task:** Clip raster using bike buffer
 
 **Output:**
 
 slope_clipped_to_bike_area
 
 
-**Concept:**  
-Raster clipping reduces dataset size.
-
-**Purpose:**  
-Speeds up raster processing and polygonization.
+**Why it matters:**  
+Reduces data size and speeds up all downstream operations.
 
 ---
 
@@ -142,30 +128,22 @@ A <= 15
 slope_bike_friendly_15
 
 
-**Concept:**  
-Raster classification converts continuous values to binary.
-
-**Purpose:**  
-Defines bike-friendly terrain:
-- 1 = suitable
-- 0 = not suitable
+**Why it matters:**  
+Transforms continuous slope values into a binary classification:
+- 1 = bike-friendly  
+- 0 = not bike-friendly  
 
 ---
 
 ### Step 6 — Polygonize Raster
-
-**Task:** Convert raster to polygons
 
 **Output:**
 
 slope_bike_friendly_15_polygon
 
 
-**Concept:**  
-Raster → vector conversion
-
-**Purpose:**  
-Enables spatial comparison with bike lanes
+**Why it matters:**  
+Converts raster into vector polygons so spatial overlay becomes possible.
 
 ---
 
@@ -181,55 +159,39 @@ DN = 1
 slope_bike_friendly_15_only
 
 
-**Concept:**  
-Filter attribute values
-
-**Purpose:**  
-Keep only bike-friendly terrain polygons
+**Why it matters:**  
+Filters out only the terrain that meets the bike-friendly criteria.
 
 ---
 
 ### Step 8 — Extract Bike-Friendly Segments
-
-**Task:** Spatial extraction
 
 **Output:**
 
 bike_friendly_segments_15
 
 
-**Concept:**  
-Spatial overlay (intersect)
-
-**Purpose:**  
-Identify bike lanes on suitable terrain
+**Why it matters:**  
+Identifies bike lane segments that intersect suitable terrain.  
+This is the final analytical result.
 
 ---
 
 # Part B — Python Print Layout Automation
 
+![Print Layout](outputs/final_print_layout.png)
+
 ## Goal
 
-Automatically generate a **professional map layout** using PyQGIS.
+Automatically generate a **clean, professional, print-ready map layout** using PyQGIS.
 
 ---
 
-## Layout Elements
+## Layout Design
 
-The automated layout includes:
+The layout was designed to be simple, readable, and portfolio-ready.
 
-- Title and subtitle
-- Map frame (98% page coverage)
-- Legend (bottom-right inside map)
-- Scale bar (bottom-left inside map)
-- North arrow (above scale bar)
-- Data attribution
-
----
-
-## Map Position
-
-The map frame is positioned as:
+### Map Position
 
 
 X: 15 mm
@@ -238,74 +200,71 @@ Width: 265 mm
 Height: 190 mm
 
 
+This ensures the map covers ~98% of the page.
+
 ---
 
-## Layout Design
+## Layout Elements
 
-- Landscape A4 format
-- Slope raster used as background
-- Bike-friendly segments emphasized as primary layer
-- Legend simplified to:
+The automated layout includes:
 
+- Title and subtitle
+- Large map frame
+- Legend (bottom-right inside map)
+- Scale bar (bottom-left inside map)
+- North arrow (above scale bar)
+- Data attribution
+
+---
+
+## Visual Design Choices
+
+### Slope Background
+Used as a contextual terrain layer with reduced opacity to avoid overpowering the map.
+
+### Bike-Friendly Segments
+Highlighted as the main layer using a darker green color to ensure visibility.
+
+### Legend
+Simplified to only include:
 
 Bike-friendly segments
 Slope (≤ 15°)
 
 
-- Scale bar:
-
-0–4 km
-
-
-- White background + black border for legend and scale bar
+This keeps the map focused and easy to interpret.
 
 ---
 
 ## Python Workflow Summary
 
-The script:
+The script performs the following:
 
 1. Loads required layers:
-   - slope
-   - dem_merged
-   - bike_friendly_segments_15
+   - slope  
+   - dem_merged  
+   - bike_friendly_segments_15  
 
 2. Creates layout:
 
 Mapping_the_Unseen_City_Print_Layout
 
 
-3. Sets page to landscape
+3. Sets page to landscape format
 
-4. Adds map with correct extent
+4. Adds and positions map
 
-5. Applies layer styling:
-   - Bike lines: dark green (#006D2C)
-   - Slope: semi-transparent
+5. Applies styling:
+   - Bike lines → dark green  
+   - Slope → semi-transparent  
 
 6. Adds layout elements:
-   - Title
-   - Legend
-   - Scale bar
-   - North arrow
+   - Title  
+   - Legend  
+   - Scale bar  
+   - North arrow  
 
-7. Exports final layout
-
----
-
-## Cartographic Design Decisions
-
-### Slope Background
-Used as contextual terrain layer without overpowering the map.
-
-### Bike-Friendly Segments
-Primary focus of the map, styled for visibility.
-
-### Legend
-Simplified to only meaningful layers.
-
-### Scale Bar & North Arrow
-Placed inside map for compact layout.
+7. Generates a print-ready layout
 
 ---
 
@@ -336,9 +295,9 @@ final_map_export.pdf
 
 This project demonstrates a complete GIS workflow:
 
-- Terrain analysis using LiDAR-derived DEM
-- Spatial filtering using slope threshold
-- Automation using QGIS Model Builder
-- Visualization using Python-based layout generation
+- Terrain analysis using LiDAR-derived DEM  
+- Spatial filtering using slope threshold  
+- Automation using QGIS Model Builder  
+- Map production using Python  
 
-The result is a reproducible workflow that transforms raw elevation data into actionable transportation insight.
+The result is a reproducible pipeline that transforms raw elevation data into a practical, transportation-focused insight.
